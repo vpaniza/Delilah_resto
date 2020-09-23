@@ -4,23 +4,12 @@ const express = require("express");
 const server = express();
 const sequelize = require("./../../mysql");
 const {check, validationResult} = require("express-validator");
+const config = require("./../../config");
 
 ////////////////////////  MIDDLEWARES  ////////////////////////
 
 const authMiddleware = require("./../../middlewares/authentication");
 const adminMiddleware = require("../../middlewares/adminAuth");
-
-//////////////////////  ERROR HANDLING  ///////////////////////
-
-const errorSemantic = (res, errorsArr) => {
-    res.status = 422;
-    res.send(
-        {
-            status: 422,
-            message: errorsArr.array()
-        }
-    )
-}
 
 ////////////////////////  ENDPOINTS  /////////////////////////
 
@@ -126,7 +115,7 @@ server.post('/', authMiddleware, adminMiddleware, [
         const validationErrors = validationResult(req);
 
         if(!validationErrors.isEmpty()){
-            errorSemantic(res,validationErrors);
+            config.errorSemantic(res,validationErrors);
             return;
         }
         else{
@@ -319,7 +308,7 @@ server.post('/:username', authMiddleware, [
         const validationErrors = validationResult(req);
 
         if(!validationErrors.isEmpty()){
-            errorSemantic(res,validationErrors);
+            config.errorSemantic(res,validationErrors);
             return;
         }
         else {

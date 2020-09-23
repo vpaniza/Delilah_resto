@@ -13,18 +13,6 @@ const config = require("./../../config");
 const authMiddleware = require("../../middlewares/authentication");
 const adminMiddleware = require("../../middlewares/adminAuth");
 
-//////////////////////  ERROR HANDLING  ///////////////////////
-
-const errorSemantic = (res, errorsArr) => {
-    res.status = 422;
-    res.send(
-        {
-            status: 422,
-            message: errorsArr.array()
-        }
-    )
-}
-
 ////////////////////////  ENDPOINTS  /////////////////////////
 
 // Login endpoint -- existing users & admin check
@@ -37,7 +25,7 @@ server.post('/login', [
         const validationErrors = validationResult(req);
 
         if(!validationErrors.isEmpty()){
-            errorSemantic(res,validationErrors);
+            config.errorSemantic(res,validationErrors);
             return;
         }
         else{
@@ -109,7 +97,7 @@ server.post('/register', [
         const { username, fullname, password, address, phone, email } = req.body;
         
         if(!validationErrors.isEmpty()){
-            errorSemantic(res,validationErrors);
+            config.errorSemantic(res,validationErrors);
             return;
         }
         else{
@@ -189,7 +177,7 @@ server.put('/:username/update', authMiddleware,[
         const validationErrors = validationResult(req);
 
         if(!validationErrors.isEmpty()){
-            errorSemantic(res,validationErrors);
+            config.errorSemantic(res,validationErrors);
             return;
         }
         else{
@@ -315,7 +303,7 @@ server.delete('/admin/delete', authMiddleware, adminMiddleware, [
         const validationErrors = validationResult(req);
 
         if(!validationErrors.isEmpty()){
-            errorSemantic(res,validationErrors);
+            config.errorSemantic(res,validationErrors);
             return;
         }
         else {

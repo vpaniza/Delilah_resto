@@ -6,10 +6,6 @@ const server = express();
 
 server.use(bodyParser.json());
 
-//////////////////////////  CONFIG  //////////////////////////
-
-const config = require("./config")
-
 //////////////////////  ROUTES IMPORT  ///////////////////////
 
 const productRoutes = require("./routes/products");
@@ -20,7 +16,6 @@ server.use("/orders", orderRoutes);
 
 const userRoutes = require("./routes/user");
 server.use("/user", userRoutes);
-
 
 //////////////////// SERVER INITIALIZE  /////////////////////
 
