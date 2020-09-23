@@ -1,0 +1,1392 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Delilah Resto API. Here you will find the specification of every endpoint available for use. ",
+    "version": "1.0.0",
+    "title": "Delilah Restó",
+    "contact": {
+      "email": "valentinapaniza93@gmail.com"
+    }
+  },
+  "tags": [
+    {
+      "name": "user",
+      "description": "User related endpoints"
+    },
+    {
+      "name": "products",
+      "description": "Access to products inventory"
+    },
+    {
+      "name": "orders",
+      "description": "Operations on orders"
+    }
+  ],
+  "externalDocs": {
+    "description": "Find out more",
+    "url": "http://swagger.io"
+  },
+  "schemes": [
+    "https",
+    "http"
+  ],
+  "paths": {
+    "/user/register": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Create a new user.",
+        "description": "",
+        "operationId": "createUser",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "User that will be added to the data base. By default, its user role will be set as 'client', and it can only be changed by administrator",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User created successfully"
+          },
+          "409": {
+            "description": "The username or email already exists"
+          },
+          "422": {
+            "description": "Some value in the body is invalid or missing",
+            "schema": {
+              "$ref": "#/definitions/SemanticError"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/user/login": {
+      "post": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Logs user into the system",
+        "description": "",
+        "operationId": "loginUser",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Username or email can be used for login (no need to send both in body).",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserLogin"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful login",
+            "schema": {
+              "$ref": "#/definitions/UserLoginResponse"
+            }
+          },
+          "401": {
+            "description": "Invalid username/password"
+          },
+          "422": {
+            "description": "Some value in the body is invalid or missing",
+            "schema": {
+              "$ref": "#/definitions/SemanticError"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/user/{username}/details": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Get user details",
+        "description": "Must be logged in to perform this.",
+        "operationId": "getUserDetails",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "description": "The username that needs to be updated",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User data retrieved correctly",
+            "schema": {
+              "$ref": "#/definitions/UserDetailsResponse"
+            }
+          },
+          "401": {
+            "description": "You need to log in first"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/user/{username}/update": {
+      "put": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Update user details",
+        "description": "Must be logged in to perform this.",
+        "operationId": "updateUser",
+        "produces": [
+          "application/json"
+        ],
+        "security": [
+          {
+            "Bearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "description": "Username that needs to be updated",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "User parameters that will be updated.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UserUpdate"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User successfully updated"
+          },
+          "401": {
+            "description": "You need to log in first"
+          },
+          "422": {
+            "description": "Some value in the body is invalid or missing",
+            "schema": {
+              "$ref": "#/definitions/SemanticError"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/user/admin/details/{userId}": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Find user by ID",
+        "description": "Returns a single user. Can only be done by administrator. Bearer token needed",
+        "operationId": "getUserById",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "ID of user to return",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/UserComplete"
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Invalid ID supplied"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/user/admin/{userId}/role": {
+      "put": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Change user role by ID",
+        "description": "Can only be done by administrator. Bearer token needed",
+        "operationId": "changeRoleById",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "description": "ID of user to return",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Role ID that wants to be put in user",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "role_id": {
+                  "type": "integer",
+                  "example": 2
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/ChangeRoleResponse"
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "User ID does nos exist"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/user/admin/delete": {
+      "delete": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Delete user by ID or username",
+        "description": "Can only be done by administrator. Bearer token needed",
+        "operationId": "deleteUser",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "User ID or username of entry that wants to be deleted. Choose either user ID or username",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "example": 2
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "User to delete does not exist"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/products": {
+      "get": {
+        "tags": [
+          "products"
+        ],
+        "summary": "Returns all product details",
+        "description": "Returns an array of objects, each object corresponds to a product.",
+        "operationId": "getProducts",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Products data retrieved correctly",
+            "schema": {
+              "$ref": "#/definitions/ProductsResponse"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "products"
+        ],
+        "summary": "Add a new product",
+        "description": "Can only be done by administrator. Bearer token needed",
+        "operationId": "addProduct",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Product object that will be added to products table. Description can be null.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProductObject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Porducts data retrieved correctly",
+            "schema": {
+              "$ref": "#/definitions/ProductsResponse"
+            }
+          },
+          "422": {
+            "description": "Some value in the body is invalid or missing",
+            "schema": {
+              "$ref": "#/definitions/SemanticError"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/products/{productId}": {
+      "get": {
+        "tags": [
+          "products"
+        ],
+        "summary": "Get product by ID",
+        "description": "Returns an object with the product details. Can only be done by administrator. Bearer token needed",
+        "operationId": "getProductByID",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "description": "ID of product to return",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products data retrieved correctly",
+            "schema": {
+              "$ref": "#/definitions/ProductID"
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Product ID not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "products"
+        ],
+        "summary": "Update product by ID",
+        "description": "Returns an object with the product details. Can only be done by administrator. Bearer token needed",
+        "operationId": "updateProductByID",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "description": "ID of product to update",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Product object that will be updated to products table. Description can be null.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/ProductObject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products updated correctly"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Product ID to update does not exist"
+          },
+          "422": {
+            "description": "Some value in the body is invalid or missing",
+            "schema": {
+              "$ref": "#/definitions/SemanticError"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/products/delete/{productId}": {
+      "delete": {
+        "tags": [
+          "products"
+        ],
+        "summary": "Delete product by ID",
+        "description": "Can only be done by administrator. Bearer token needed",
+        "operationId": "delete",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "description": "ID of product to delete",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product deleted correctly"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Product ID does not exist"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/orders": {
+      "get": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Returns all order details",
+        "description": "Returns an array of objects, each object corresponds to an order.",
+        "operationId": "getOrders",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Products data retrieved correctly",
+            "schema": {
+              "$ref": "#/definitions/AdminOrders"
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Create a new order.",
+        "description": "Can only be done by administrator. Bearer token needed",
+        "operationId": "createOrder",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Order object that will be added to orders table.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderObject"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order created successfully",
+            "schema": {
+              "$ref": "#/definitions/AdminOrders"
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "422": {
+            "description": "Some value in the body is invalid or missing",
+            "schema": {
+              "$ref": "#/definitions/SemanticError"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Get order by ID",
+        "description": "Returns a single order. Can only be done by administrator. Bearer token needed",
+        "operationId": "getOrderById",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "description": "ID of order to return",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/OrderObjectID"
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Order ID not found"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/orders/{orderId}/detail": {
+      "get": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Get full detail of order by ID",
+        "description": "Returns a single order. Can only be done by administrator. Bearer token needed",
+        "operationId": "getFullOrderById",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "description": "ID of order to return",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order details retrieved correctly",
+            "schema": {
+              "$ref": "#/definitions/FullOrderObjectID"
+            }
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Order ID not found"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/orders/status/{orderId}": {
+      "put": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Update an order status",
+        "description": "Can only be done by administrator. Bearer token needed",
+        "operationId": "updateOrderStatus",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "description": "Order ID to update status",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Order status updated"
+          },
+          "401": {
+            "description": "Not authorized"
+          },
+          "404": {
+            "description": "Invalid order ID or order status ID"
+          },
+          "422": {
+            "description": "Some value in the body is invalid or missing",
+            "schema": {
+              "$ref": "#/definitions/SemanticError"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/orders/{username}/create": {
+      "post": {
+        "tags": [
+          "orders"
+        ],
+        "summary": "Creates a new order (client use)",
+        "description": "Endpoint for client use. Creates a new order. Client must be logged in.",
+        "operationId": "createOrderClient",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "username",
+            "in": "path",
+            "description": "The username that needs to be updated",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Order object that will be added to orders table.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/OrderObjectClient"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Orden creada correctamente"
+          },
+          "401": {
+            "description": "Not authorized. Must be logged in"
+          },
+          "404": {
+            "description": "Invalid product/s ID"
+          },
+          "422": {
+            "description": "Some value in the body is invalid or missing",
+            "schema": {
+              "$ref": "#/definitions/SemanticError"
+            }
+          },
+          "500": {
+            "description": "Server error"
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    }
+  },
+  "securityDefinitions": {
+    "Bearer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Token obtained from response when the user logs in."
+    }
+  },
+  "definitions": {
+    "UserLogin": {
+      "type": "object",
+      "title": "User Login",
+      "properties": {
+        "username": {
+          "type": "string",
+          "example": "johnny"
+        },
+        "email": {
+          "type": "string",
+          "example": "johndoe@mail.com"
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "example": "doe123"
+        }
+      }
+    },
+    "UserLoginResponse": {
+      "title": "User Login Response",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "example": 200
+        },
+        "message": {
+          "type": "string",
+          "example": "Inicio de sesión correcto"
+        },
+        "username": {
+          "type": "string",
+          "example": "johnny"
+        },
+        "token": {
+          "type": "string",
+          "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvaG5ueSIsInJvbGUiOjIsImlhdCI6MTYwMDg3ODgwNX0.6plJ043nR2rT_hR3eKEK-wb_L_5u2UBaab1xWxH0jjw"
+        }
+      }
+    },
+    "UserDetailsResponse": {
+      "title": "User Details Response",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "example": 200
+        },
+        "user_details": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "example": {
+              "username": "johnny",
+              "fullname": "John Doe",
+              "address": "Street Name 123",
+              "phone": "1512345678",
+              "email": "johndoe@somemail.com"
+            }
+          }
+        }
+      }
+    },
+    "User": {
+      "type": "object",
+      "title": "User",
+      "required": [
+        "username",
+        "fullname",
+        "password",
+        "address",
+        "phone",
+        "email"
+      ],
+      "properties": {
+        "username": {
+          "type": "string",
+          "example": "johnny"
+        },
+        "fullname": {
+          "type": "string",
+          "example": "John Doe"
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "example": "doe123"
+        },
+        "address": {
+          "type": "string",
+          "example": "Street Name 123"
+        },
+        "phone": {
+          "type": "string",
+          "example": "1512345678"
+        },
+        "email": {
+          "type": "string",
+          "example": "johndoe@somemail.com"
+        }
+      }
+    },
+    "UserComplete": {
+      "type": "object",
+      "title": "User complete details",
+      "required": [
+        "id",
+        "username",
+        "fullname",
+        "password",
+        "address",
+        "phone",
+        "email",
+        "role_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "example": 2
+        },
+        "username": {
+          "type": "string",
+          "example": "johnny"
+        },
+        "fullname": {
+          "type": "string",
+          "example": "John Doe"
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "example": "$2b$10$CwMe/udCpRpZQHKJK0fHt.W7VyXzH2G7VwnRXLrH3G5rGrff7JF3i"
+        },
+        "address": {
+          "type": "string",
+          "example": "Street Name 123"
+        },
+        "phone": {
+          "type": "string",
+          "example": "1512345678"
+        },
+        "email": {
+          "type": "string",
+          "example": "johndoe@somemail.com"
+        },
+        "role_id": {
+          "type": "integer",
+          "example": 2
+        }
+      }
+    },
+    "UserUpdate": {
+      "type": "object",
+      "title": "User Update",
+      "required": [
+        "fullname",
+        "password",
+        "address",
+        "phone"
+      ],
+      "properties": {
+        "fullname": {
+          "type": "string",
+          "example": "John Doe"
+        },
+        "password": {
+          "type": "string",
+          "format": "password",
+          "example": "doe123"
+        },
+        "address": {
+          "type": "string",
+          "example": "Street Name 123"
+        },
+        "phone": {
+          "type": "string",
+          "example": "1512345678"
+        }
+      }
+    },
+    "ChangeRoleResponse": {
+      "type": "object",
+      "title": "Changed role response",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "example": 200
+        },
+        "operation_details": {
+          "type": "object",
+          "example": {
+            "fieldCount": 0,
+            "affectedRows": 1,
+            "insertId": 0,
+            "info": "Rows matched: 1  Changed: 1  Warnings: 0",
+            "serverStatus": 2,
+            "warningStatus": 0,
+            "changedRows": 1
+          }
+        }
+      }
+    },
+    "ProductsResponse": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "format": "int64",
+          "example": 200
+        },
+        "data": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "example": {
+              "id": 1,
+              "name": "Hamburguesa clásica",
+              "description": "",
+              "price": 350,
+              "stock": 27,
+              "picture": "https://publicburger.shop/wp-content/uploads/2019/08/01.-Classic-Burger.jpg"
+            }
+          }
+        }
+      }
+    },
+    "ProductObject": {
+      "type": "object",
+      "title": "Product",
+      "required": [
+        "name",
+        "description",
+        "price",
+        "stock",
+        "picture"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "example": "Papas fritas con cheddar y panceta"
+        },
+        "description": {
+          "type": "string",
+          "example": "Papas rústicas con queso cheddar, panceta y cebolla de verdeo."
+        },
+        "price": {
+          "type": "integer",
+          "format": "int64",
+          "example": 250
+        },
+        "stock": {
+          "type": "integer",
+          "format": "int64",
+          "example": 33
+        },
+        "picture": {
+          "type": "string",
+          "example": "https://locosxlaparrilla.com/wp-content/uploads/2015/02/Receta-recetas-locos-x-la-parrilla-locosxlaparrilla-receta-papas-fritas-cebolla-panceta-papas-fritas-receta-papas-fritas-612x477.jpg"
+        }
+      }
+    },
+    "ProductID": {
+      "type": "object",
+      "title": "Product ID response object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "format": "int64",
+          "example": 200
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "format": "int64",
+              "example": 2
+            },
+            "name": {
+              "type": "string",
+              "example": "Papas fritas con cheddar y panceta"
+            },
+            "description": {
+              "type": "string",
+              "example": "Papas rústicas con queso cheddar, panceta y cebolla de verdeo."
+            },
+            "price": {
+              "type": "integer",
+              "format": "int64",
+              "example": 250
+            },
+            "stock": {
+              "type": "integer",
+              "format": "int64",
+              "example": 33
+            },
+            "picture": {
+              "type": "string",
+              "example": "https://locosxlaparrilla.com/wp-content/uploads/2015/02/Receta-recetas-locos-x-la-parrilla-locosxlaparrilla-receta-papas-fritas-cebolla-panceta-papas-fritas-receta-papas-fritas-612x477.jpg"
+            }
+          }
+        }
+      }
+    },
+    "AdminOrders": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "format": "int64",
+          "example": 200
+        },
+        "orders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64",
+                "example": 1
+              },
+              "placed_time": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2020-09-23T20:49:07.000Z"
+              },
+              "username": {
+                "type": "string",
+                "example": "johnny"
+              },
+              "address": {
+                "type": "string",
+                "example": "Street Name 123"
+              },
+              "payment_method": {
+                "type": "string",
+                "example": "Tarjeta de crédito"
+              },
+              "status_name": {
+                "type": "string",
+                "example": "Enviando"
+              },
+              "products": {
+                "type": "string",
+                "example": "Hamburguesa clásica,Focaccia,Sandwich veggie"
+              },
+              "total_price": {
+                "type": "integer",
+                "format": "int64",
+                "example": 960
+              }
+            }
+          }
+        }
+      }
+    },
+    "OrderObject": {
+      "type": "object",
+      "title": "Order details",
+      "properties": {
+        "user_id": {
+          "type": "integer",
+          "format": "int64",
+          "example": 2
+        },
+        "payment_method_id": {
+          "type": "integer",
+          "format": "int64",
+          "example": 1
+        },
+        "status_id": {
+          "type": "integer",
+          "format": "int64",
+          "example": 5
+        },
+        "order_products_id": {
+          "type": "string",
+          "example": "[1,1,3,6]"
+        }
+      }
+    },
+    "OrderObjectID": {
+      "type": "object",
+      "title": "Order detail by ID",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "format": "int64",
+          "example": 200
+        },
+        "order_details": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "integer",
+              "format": "int64",
+              "example": 1
+            },
+            "placed_time": {
+              "type": "string",
+              "format": "date-time",
+              "example": "2020-09-23T20:49:07.000Z"
+            },
+            "username": {
+              "type": "string",
+              "example": "johnny"
+            },
+            "address": {
+              "type": "string",
+              "example": "Street Name 123"
+            },
+            "payment_method": {
+              "type": "string",
+              "example": "Tarjeta de crédito"
+            },
+            "status_name": {
+              "type": "string",
+              "example": "Enviando"
+            },
+            "products": {
+              "type": "string",
+              "example": "Hamburguesa clásica,Focaccia,Sandwich veggie"
+            },
+            "total_price": {
+              "type": "integer",
+              "format": "int64",
+              "example": 960
+            }
+          }
+        }
+      }
+    },
+    "FullOrderObjectID": {
+      "type": "object",
+      "title": "Order detail by ID",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "format": "int64",
+          "example": 200
+        },
+        "order_details": {
+          "type": "object",
+          "properties": {
+            "username": {
+              "type": "string",
+              "example": "johnny"
+            },
+            "fullname": {
+              "type": "string",
+              "example": "John Doe"
+            },
+            "address": {
+              "type": "string",
+              "example": "Street Name 123"
+            },
+            "phone": {
+              "type": "string",
+              "example": "1511111111"
+            },
+            "email": {
+              "type": "string",
+              "example": "johndoe@mail.com"
+            },
+            "payment_method": {
+              "type": "string",
+              "example": "Tarjeta de crédito"
+            },
+            "status_name": {
+              "type": "string",
+              "example": "Enviando"
+            },
+            "products": {
+              "type": "string",
+              "example": "Hamburguesa clásica,Focaccia,Sandwich veggie"
+            },
+            "product_price": {
+              "type": "string",
+              "example": "350,300,310"
+            },
+            "total_price": {
+              "type": "integer",
+              "format": "int64",
+              "example": 960
+            }
+          }
+        }
+      }
+    },
+    "OrderObjectClient": {
+      "type": "object",
+      "properties": {
+        "payment_method_id": {
+          "type": "integer",
+          "format": "int64",
+          "example": 1
+        },
+        "order_products_id": {
+          "type": "string",
+          "example": "[1,1,3,6]"
+        }
+      }
+    },
+    "SemanticError": {
+      "type": "object",
+      "title": "Semantic error in body",
+      "properties": {
+        "status": {
+          "type": "integer",
+          "example": 422
+        },
+        "message": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "example": {
+              "msg": "Missing/invalid username",
+              "param": "username",
+              "location": "body"
+            }
+          }
+        }
+      }
+    }
+  }
+}
