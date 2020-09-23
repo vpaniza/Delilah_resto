@@ -35,11 +35,20 @@ server.get('/:id', authMiddleware, adminMiddleware, async (req,res)=>{
     try{    
         const data = await sequelize.query(sql, 
             { type: sequelize.QueryTypes.SELECT} );
-        res.status = 200;
-        res.send({
-            status: 200,
-            data: data[0]
-        });
+        if(data[0]){
+            res.status = 200;
+            res.send({
+                status: 200,
+                data: data[0]
+            });
+        }
+        else{
+            res.status = 404;
+            res.send({
+                status: 404,
+                message: "El ID del producto no existe"
+            });
+        }
     } catch(error){
         res.status(500).send(error);
     } 
@@ -124,15 +133,24 @@ server.put('/:id', authMiddleware, adminMiddleware, [
                             picture = ? 
                          WHERE id = ${req.params.id}`;
             try{
-                await sequelize.query(sql, 
+                const data = await sequelize.query(sql, 
                     {
                         replacements: [name, description, price, stock, picture]
                     }
                 )
-                res.send({
-                    status: 200,
-                    message: "Producto actualizado correctamente"
-                });
+                if(data[0].info.startsWith("Rows matched: 1")){
+                    res.send({
+                        status: 200,
+                        message: "Producto actualizado correctamente"
+                    });
+                }
+                else if(data[0].info.startsWith("Rows matched: 0")){
+                    res.status = 404;
+                    res.send({
+                        status: 404,
+                        message: "El producto que se quiere actualizar no existe"
+                    });
+                }
             } catch(error){
                 res.status(500).send(error);
             }
@@ -144,16 +162,25 @@ server.put('/:id', authMiddleware, adminMiddleware, [
 server.delete('/delete/:id', authMiddleware, adminMiddleware, async (req,res)=>{
     const sql = `DELETE FROM products WHERE id = :id`;
     try{
-        await sequelize.query(sql, 
+        const data = await sequelize.query(sql, 
             {
                 replacements: {id: req.params.id}
             }
         )
-        res.status = 200;
-        res.send({
-            status: 200,
-            message: "Producto eliminado"
-        });
+        if(data[0].affectedRows){
+            res.status = 200;
+            res.send({
+                status: 200,
+                message: "Producto eliminado"
+            });
+        }
+        else{
+            res.status = 404;
+            res.send({
+                status: 404,
+                message: "El producto a eliminar no existe"
+            });
+        }
     } catch(error){
         res.status(500).send(error);
     }

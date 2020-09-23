@@ -260,11 +260,20 @@ server.get('/admin/details/:userid', authMiddleware, adminMiddleware, async (req
                 replacements: [req.params.userid]
             }
         );
-        res.status = 200;
-        res.send({
-            status: 200,
-            user_details: data
-        })
+        if(data[0]){
+            res.status = 200;
+            res.send({
+                status: 200,
+                user_details: data
+            })
+        }
+        else{
+            res.status = 404;
+            res.send({
+                status: 404,
+                message: "User not found"
+            })    
+        }
     } catch(error){
         res.status(500).send(error);
     }
@@ -280,11 +289,20 @@ server.put('/admin/:userid/role', authMiddleware, adminMiddleware, async (req,re
         const data = await sequelize.query(sql,
             { replacements: [req.body.role_id] }
         );
-        res.status = 200;
-        res.send({
-            status: 200,
-            operation_details: data[0]
-        })
+        if(data[0].info.startsWith("Rows matched: 1")){
+            res.status = 200;
+            res.send({
+                status: 200,
+                operation_details: data[0]
+            });
+        }
+        else if(data[0].info.startsWith("Rows matched: 0")){
+            res.status = 404;
+            res.send({
+                status: 404,
+                message: "El ID de usuario no existe"
+            });
+        }
     } catch(error){
         res.status(500).send(error);
     }
@@ -311,14 +329,23 @@ server.delete('/admin/delete', authMiddleware, adminMiddleware, [
                          WHERE (id = ? OR username = ?)`;
 
             try{
-                await sequelize.query(sql,
+                const data = await sequelize.query(sql,
                     { replacements: [id, username] }
                 );
-                res.status = 200;
-                res.send({
-                    status: 200,
-                    message: "Se eliminó el usuario correctamente"
-                })
+                if(data[0].affectedRows){
+                    res.status = 200;
+                    res.send({
+                        status: 200,
+                        message: "Se eliminó el usuario correctamente"
+                    })
+                }
+                else{
+                    res.status = 404;
+                    res.send({
+                        status: 404,
+                        message: "No existe el usuario que se quiere eliminar"
+                    })
+                }
             } catch(error){
                 res.status(500).send(error);
             }

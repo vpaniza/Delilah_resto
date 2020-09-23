@@ -17,7 +17,7 @@ const adminMiddleware = require("../../middlewares/adminAuth");
 server.get('/', authMiddleware, adminMiddleware, async (req,res) => {
     const sql = `SELECT orders.id, orders.placed_time, users.username AS username, users.address AS address, 
                  payment_method.name AS payment_method, order_status.name AS status_name, 
-                 GROUP_CONCAT(products.name) AS product, SUM(products.price) AS total_price FROM orders
+                 GROUP_CONCAT(products.name) AS products, SUM(products.price) AS total_price FROM orders
 
                  JOIN order_status ON orders.status_id = order_status.id
                  JOIN order_products ON orders.id = order_products.order_id
@@ -60,7 +60,7 @@ server.get('/:id', authMiddleware, adminMiddleware, async (req,res) => {
         res.status = 200;
         res.send({
             status: 200,
-            order_details: data
+            order_details: data[0]
         })
     } catch(error){
         res.status(500).send(error);
@@ -71,7 +71,7 @@ server.get('/:id', authMiddleware, adminMiddleware, async (req,res) => {
 server.get('/:id/detail', authMiddleware, adminMiddleware, async (req,res) => {
     const sql = `SELECT users.username AS username, users.fullname AS fullname, users.address AS address, 
                  users.phone AS phone, users.email AS email, payment_method.name AS payment_method, 
-                 order_status.name AS status_name, GROUP_CONCAT(products.name) AS product, 
+                 order_status.name AS status_name, GROUP_CONCAT(products.name) AS products, 
                  GROUP_CONCAT(products.price) AS product_price, SUM(products.price) AS total_price FROM orders
     
                  JOIN order_status ON orders.status_id = order_status.id
@@ -89,7 +89,7 @@ server.get('/:id/detail', authMiddleware, adminMiddleware, async (req,res) => {
         res.status = 200;
         res.send({
             status: 200,
-            order_details: data
+            order_details: data[0]
         })
     } catch(error){
         res.status(500).send(error);
@@ -296,7 +296,7 @@ async function checkUserExistenceByID(userID){
 }
 
 // Create new order -- by client
-server.post('/:username', authMiddleware, [
+server.post('/:username/create', authMiddleware, [
     check('payment_method_id', 'Missing/invalid payment method ID')
         .not().isEmpty()
         .isInt(),
@@ -390,20 +390,37 @@ server.put('/status/:id', authMiddleware, adminMiddleware, [
         .isInt()
     ],
     async (req,res)=>{
-        const sql = `UPDATE orders 
-                    SET status_id = ? 
-                    WHERE id= ?`;
-        try{
-            await sequelize.query(sql, 
-                { replacements: [req.body.status_id, req.params.id] }
-            )
-            res.status = 200;
-            res.send({
-                status: 200,
-                message: "Orden actualizada correctamente"
-            });
-        } catch(error){
-            res.status(500).send(error);
+        const validationErrors = validationResult(req);
+
+        if(!validationErrors.isEmpty()){
+            config.errorSemantic(res,validationErrors);
+            return;
+        }
+        else{
+            const sql = `UPDATE orders 
+                         SET status_id = ? 
+                         WHERE id= ?`;
+            try{
+                const data = await sequelize.query(sql, 
+                    { replacements: [req.body.status_id, req.params.id] }
+                )
+                if(data[0].info.startsWith("Rows matched: 1")){
+                    res.status = 200;
+                    res.send({
+                        status: 200,
+                        message: "Estado de orden actualizado correctamente"
+                    });
+                }
+                else if(data[0].info.startsWith("Rows matched: 0")){
+                    res.status = 404;
+                    res.send({
+                        status: 404,
+                        message: "ID de orden o estado de orden inválido"
+                    }); 
+                }
+            } catch(error){
+                res.status(500).send(error);
+            }
         }
     }
 );
