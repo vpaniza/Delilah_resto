@@ -146,10 +146,11 @@ server.post('/', authMiddleware, adminMiddleware, [
                         
                         if(orderDetails.status === 200){
                             const orderProducts = JSON.parse(orderDetails.data[0].order_products_id);
-                
+                            const orderProductsUnique = [...new Set(orderProducts)];
                             let statusArray = [];
-                            for (product of orderProducts){
-                                const insertProductsObj = await fillOrderProductsTable(orderDetails.data[0].id, product);
+                            for (product of orderProductsUnique){
+                                let quantity = getOccurrence(orderProducts, product);
+                                const insertProductsObj = await fillOrderProductsTable(orderDetails.data[0].id, product, quantity);
                                 statusArray.push(insertProductsObj.status)
                             }
                 
@@ -191,6 +192,10 @@ server.post('/', authMiddleware, adminMiddleware, [
     }
 );
 
+function getOccurrence(array, value) {
+    return array.filter((v) => (v === value)).length;
+}
+
 async function getOrderProductDetails() {
     const sql = `SELECT id, order_products_id FROM orders
                  WHERE id = LAST_INSERT_ID()`;
@@ -213,14 +218,14 @@ async function getOrderProductDetails() {
     return statusObject;
 }
 
-async function fillOrderProductsTable(orderID,productID){
-    const sql = `INSERT INTO order_products (order_id, product_id) 
-                 VALUES (?, ?) `;
+async function fillOrderProductsTable(orderID,productID, quantity){
+    const sql = `INSERT INTO order_products (order_id, product_id, quantity) 
+                 VALUES (?, ?, ?) `;
     
     let statusObject = new Object;             
     try{
         const data = await sequelize.query(sql,
-            { replacements: [orderID, productID] }
+            { replacements: [orderID, productID, quantity] }
         );
         statusObject = {
             status: 200,
@@ -333,10 +338,11 @@ server.post('/:username/create', authMiddleware, [
                     const orderProductsDetails = await getOrderProductDetails();
                     if(orderProductsDetails.status === 200){
                         const orderProducts = JSON.parse(orderProductsDetails.data[0].order_products_id);
-            
+                        const orderProductsUnique = [...new Set(orderProducts)];
                         let statusArray = [];
-                        for (product of orderProducts){
-                            const insertProductsObj = await fillOrderProductsTable(orderProductsDetails.data[0].id, product);
+                        for (product of orderProductsUnique){
+                            let quantity = getOccurrence(orderProducts, product);
+                            const insertProductsObj = await fillOrderProductsTable(orderDetails.data[0].id, product, quantity);
                             statusArray.push(insertProductsObj.status)
                         }
             
@@ -424,5 +430,51 @@ server.put('/status/:id', authMiddleware, adminMiddleware, [
         }
     }
 );
+
+//Delete order by id
+server.delete('/delete/:id', authMiddleware, adminMiddleware, async (req,res)=>{
+    const sqlDeleted = `INSERT INTO deleted_orders
+                        SELECT orders.* FROM orders
+                        WHERE id = :id`;
+    const sqlFK = `DELETE FROM order_products WHERE order_id = :id`;
+    const sql = `DELETE FROM orders WHERE id = :id`;
+    try{
+        const dataDeleted = await sequelize.query(sqlDeleted, 
+            {
+                replacements: {id: req.params.id}
+            }
+        )
+        if(dataDeleted){
+            const dataFK = await sequelize.query(sqlFK, 
+                {
+                    replacements: {id: req.params.id}
+                }
+            )
+            if(dataFK[0].affectedRows){
+                const data = await sequelize.query(sql, 
+                    {
+                        replacements: {id: req.params.id}
+                    }
+                )
+                if(data[0].affectedRows){
+                    res.status = 200;
+                    res.send({
+                    status: 200,
+                    message: "Orden eliminada"
+                    });
+                }
+            }
+        }
+        else{
+            res.status = 404;
+            res.send({
+                status: 404,
+                message: "La orden a eliminar no existe"
+            });
+        }
+    } catch(error){
+        res.status(500).send(error);
+    }
+});
 
 module.exports = server;
