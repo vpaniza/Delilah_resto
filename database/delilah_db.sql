@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 23-09-2020 a las 17:28:13
+-- Tiempo de generación: 28-09-2020 a las 01:47:45
 -- Versión del servidor: 10.4.14-MariaDB
 -- Versión de PHP: 7.4.9
 
@@ -20,6 +20,21 @@ SET time_zone = "+00:00";
 --
 -- Base de datos: `delilah_db`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `deleted_orders`
+--
+
+CREATE TABLE `deleted_orders` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `placed_time` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `payment_method_id` int(11) NOT NULL,
+  `status_id` int(11) NOT NULL DEFAULT 1,
+  `order_products_id` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
 
@@ -45,7 +60,8 @@ CREATE TABLE `orders` (
 CREATE TABLE `order_products` (
   `id` int(11) NOT NULL,
   `order_id` int(11) NOT NULL,
-  `product_id` int(11) NOT NULL
+  `product_id` int(11) NOT NULL,
+  `quantity` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- --------------------------------------------------------
@@ -140,7 +156,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `username`, `fullname`, `password`, `address`, `phone`, `email`, `role_id`) VALUES
 (1, 'admin1', 'administrador', '$2b$10$ip.W5rqR2O/6ALzkDHfadOJfQkjE258QlVR1UWnwJlXgGhQVfu0km', 'No Address 123', '10000000', 'admin@delilah.com', 1),
-(2, 'johnny', 'John Doe', '$2b$10$8GrgP4pjJLyfmNnWvrBFDeLGnre2mbpfMTslYwsZoXgILQDFmZZQG', 'Some Street 456', '1511111111', 'johndoe@mail.com', 2);
+(2, 'johnny', 'John Doe', '$2b$10$wjnUZdMPaKo4tOCXQSINlOH9ooKEnZC7H99wVcFZ7SseIfRafr6Fa', 'Some Street 456', '1511111111', 'johndoe@mail.com', 2);
 
 -- --------------------------------------------------------
 
@@ -164,6 +180,15 @@ INSERT INTO `user_roles` (`id`, `name`) VALUES
 --
 -- Índices para tablas volcadas
 --
+
+--
+-- Indices de la tabla `deleted_orders`
+--
+ALTER TABLE `deleted_orders`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `payment_method_id` (`payment_method_id`),
+  ADD KEY `orders_ibfk_2` (`status_id`);
 
 --
 -- Indices de la tabla `orders`
@@ -220,16 +245,22 @@ ALTER TABLE `user_roles`
 --
 
 --
+-- AUTO_INCREMENT de la tabla `deleted_orders`
+--
+ALTER TABLE `deleted_orders`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
+
+--
 -- AUTO_INCREMENT de la tabla `orders`
 --
 ALTER TABLE `orders`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=75;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=85;
 
 --
 -- AUTO_INCREMENT de la tabla `order_products`
 --
 ALTER TABLE `order_products`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=50;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=77;
 
 --
 -- AUTO_INCREMENT de la tabla `order_status`
@@ -253,7 +284,7 @@ ALTER TABLE `products`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=44;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=45;
 
 --
 -- AUTO_INCREMENT de la tabla `user_roles`
